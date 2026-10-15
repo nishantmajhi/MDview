@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MDview</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cstyle%3E.bgbox%7Bfill:%231f2328%7D.ic%7Bfill:none;stroke:%23ffffff%7D.solid%7Bfill:%23ffffff%7D.letter%7Bfill:%231f2328%7D@media(prefers-color-scheme:dark)%7B.bgbox%7Bfill:%23e6edf3%7D.ic%7Bstroke:%230d1117%7D.solid%7Bfill:%230d1117%7D.letter%7Bfill:%23e6edf3%7D%7D%3C/style%3E%3Crect class='bgbox' width='24' height='24' rx='5'/%3E%3Crect class='ic' x='3' y='4' width='8' height='16' rx='1.5' stroke-width='1.6'/%3E%3Cline class='ic' x1='5.3' y1='9' x2='9' y2='9' stroke-width='1.3' stroke-linecap='round'/%3E%3Cline class='ic' x1='5.3' y1='12.5' x2='8' y2='12.5' stroke-width='1.3' stroke-linecap='round'/%3E%3Cline class='ic' x1='5.3' y1='16' x2='8.7' y2='16' stroke-width='1.3' stroke-linecap='round'/%3E%3Crect class='solid' x='13' y='4' width='8' height='16' rx='1.5'/%3E%3Ctext class='letter' x='17' y='16' font-size='9' font-family='Arial,sans-serif' font-weight='700' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --bg2: #f6f8fa;
+        --bg3: #eef1f4;
+        --fg: #1f2328;
+        --fg2: #636c76;
+        --border: #d0d7de;
+        --link: #0969da;
+        --accent: #0969da;
+        --code-bg: #f6f8fa;
+        --blockquote-b: #d0d7de;
+        --blockquote-c: #636c76;
+        --table-alt: #f6f8fa;
+        --h-border: #d0d7de;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --bg2: #161b22;
+          --bg3: #21262d;
+          --fg: #e6edf3;
+          --fg2: #8d96a0;
+          --border: #30363d;
+          --link: #4493f8;
+          --accent: #4493f8;
+          --code-bg: #161b22;
+          --blockquote-b: #3d444d;
+          --blockquote-c: #8d96a0;
+          --table-alt: #161b22;
+          --h-border: #21262d;
+          --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica,
+          Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ── Top bar ── */
+      #topbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      /* Brand mark - text only; no logo*/
+      #brand {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--fg);
+        letter-spacing: -0.01em;
+        text-decoration: none;
+      }
+
+      #filename {
+        flex: 1;
+        font-size: 13px;
+        color: var(--fg2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+      }
+
+      .tb-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 11px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg3);
+        color: var(--fg);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition:
+          background 0.12s,
+          border-color 0.12s;
+      }
+      .tb-btn:hover {
+        background: var(--bg2);
+        border-color: var(--fg2);
+      }
+      .tb-btn:active {
+        transform: scale(0.98);
+      }
+
+      #toc-btn {
+        display: none;
+      }
+      #toc-btn.visible {
+        display: inline-flex;
+      }
+
+      #file-input {
+        display: none;
+      }
+
+      /* ── Landing / drop zone ── */
+      #landing {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 48px 24px;
+        text-align: center;
+      }
+      #landing-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--fg2);
+      }
+      #landing h1 {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--fg);
+      }
+      #landing p {
+        font-size: 14px;
+        color: var(--fg2);
+        max-width: 300px;
+        line-height: 1.5;
+      }
+      #landing-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 20px;
+        border-radius: 6px;
+        border: 1px solid var(--accent);
+        background: transparent;
+        color: var(--accent);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.12s;
+        margin-top: 4px;
+      }
+      #landing-btn:hover {
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+      }
+
+      #drop-hint {
+        font-size: 12px;
+        color: var(--fg2);
+        opacity: 0.7;
+      }
+
+      /* drag-over highlight */
+      body.drag-over #landing {
+        outline: 2px dashed var(--accent);
+        outline-offset: -8px;
+        border-radius: 8px;
+      }
+
+      /* ── Rendered content ── */
+      #content {
+        display: none;
+        flex: 1;
+        padding: 32px 24px 64px;
+        max-width: 880px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      /* ── Markdown styles ── */
+      .md-body {
+        word-wrap: break-word;
+      }
+
+      .md-body h1,
+      .md-body h2,
+      .md-body h3,
+      .md-body h4,
+      .md-body h5,
+      .md-body h6 {
+        font-weight: 600;
+        line-height: 1.25;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        color: var(--fg);
+      }
+      .md-body h1 {
+        font-size: 2em;
+        border-bottom: 1px solid var(--h-border);
+        padding-bottom: 0.3em;
+      }
+      .md-body h2 {
+        font-size: 1.5em;
+        border-bottom: 1px solid var(--h-border);
+        padding-bottom: 0.3em;
+      }
+      .md-body h3 {
+        font-size: 1.25em;
+      }
+      .md-body h4 {
+        font-size: 1em;
+      }
+      .md-body h5 {
+        font-size: 0.875em;
+      }
+      .md-body h6 {
+        font-size: 0.85em;
+        color: var(--fg2);
+      }
+
+      .md-body > *:first-child {
+        margin-top: 0 !important;
+      }
+
+      .md-body p {
+        margin-bottom: 1em;
+      }
+
+      .md-body a {
+        color: var(--link);
+        text-decoration: none;
+      }
+      .md-body a:hover {
+        text-decoration: underline;
+      }
+
+      .md-body strong {
+        font-weight: 600;
+      }
+      .md-body em {
+        font-style: italic;
+      }
+
+      .md-body code {
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 0.85em;
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.2em 0.4em;
+      }
+
+      .md-body pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        overflow-x: auto;
+        margin-bottom: 1em;
+        line-height: 1.45;
+        position: relative;
+      }
+
+      .code-copy-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--fg2);
+        font-size: 11px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        opacity: 0;
+        transition:
+          opacity 0.15s,
+          background 0.12s,
+          color 0.12s;
+        white-space: nowrap;
+      }
+      .md-body pre:hover .code-copy-btn {
+        opacity: 1;
+      }
+      .code-copy-btn:hover {
+        background: var(--bg3);
+        color: var(--fg);
+      }
+      .code-copy-btn.copied {
+        color: #2da44e;
+        border-color: #2da44e;
+      }
+      .md-body pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 13px;
+        color: var(--fg);
+      }
+
+      .md-body blockquote {
+        border-left: 4px solid var(--blockquote-b);
+        color: var(--blockquote-c);
+        padding: 0 1em;
+        margin: 0 0 1em;
+      }
+      .md-body blockquote > :last-child {
+        margin-bottom: 0;
+      }
+
+      .md-body ul,
+      .md-body ol {
+        margin-bottom: 1em;
+        padding-left: 2em;
+      }
+      .md-body li {
+        margin-top: 0.25em;
+      }
+      .md-body li > p {
+        margin-bottom: 0.25em;
+      }
+      .md-body li + li {
+        margin-top: 0.25em;
+      }
+
+      /* Task lists */
+      .md-body ul.task-list {
+        list-style: none;
+        padding-left: 0;
+      }
+      .md-body .task-list-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+      }
+      .md-body .task-list-item input[type="checkbox"] {
+        margin-top: 4px;
+        flex-shrink: 0;
+        cursor: default;
+        accent-color: var(--accent);
+      }
+
+      .md-body table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 1em;
+        display: block;
+        overflow-x: auto;
+      }
+      .md-body table th,
+      .md-body table td {
+        border: 1px solid var(--border);
+        padding: 6px 13px;
+        text-align: left;
+      }
+      .md-body table th {
+        background: var(--bg2);
+        font-weight: 600;
+      }
+      .md-body table tr:nth-child(even) td {
+        background: var(--table-alt);
+      }
+
+      .md-body hr {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 1.5em 0;
+      }
+
+      .md-body img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+      }
+
+      .md-body details {
+        margin-bottom: 1em;
+      }
+      .md-body summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      /* ── TOC panel ── */
+      #toc-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 200;
+      }
+      #toc-overlay.open {
+        display: block;
+      }
+
+      #toc-drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(300px, 90vw);
+        background: var(--bg);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+
+      #toc-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--fg2);
+        flex-shrink: 0;
+      }
+
+      #toc-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--fg2);
+        display: flex;
+        align-items: center;
+        padding: 2px;
+        border-radius: 4px;
+      }
+      #toc-close:hover {
+        background: var(--bg3);
+      }
+
+      #toc-links {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0 24px;
+      }
+
+      #toc-links a {
+        display: block;
+        padding: 5px 16px;
+        font-size: 13px;
+        color: var(--fg);
+        text-decoration: none;
+        border-left: 3px solid transparent;
+        line-height: 1.4;
+        transition:
+          background 0.1s,
+          color 0.1s;
+      }
+      #toc-links a:hover {
+        background: var(--bg2);
+        color: var(--link);
+      }
+      #toc-links a.toc-h2 {
+        padding-left: 28px;
+      }
+      #toc-links a.toc-h3 {
+        padding-left: 40px;
+        font-size: 12px;
+        color: var(--fg2);
+      }
+      #toc-links a.toc-active {
+        border-left-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ── Scroll-to-top ── */
+      #up-btn {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 16px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--fg);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow);
+        z-index: 50;
+        transition: background 0.12s;
+      }
+      #up-btn.visible {
+        display: flex;
+      }
+      #up-btn:hover {
+        background: var(--bg2);
+      }
+
+      /* ── Responsive ── */
+      @media (min-width: 720px) {
+        #content {
+          padding: 40px 48px 80px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top bar -->
+    <header id="topbar">
+      <!-- Custom "split view" brand mark (raw text -> rendered text), no third-party logos -->
+      <div id="brand">Markdown Viewer</div>
+
+      <span id="filename" style="visibility: hidden"></span>
+
+      <button
+        class="tb-btn"
+        id="open-btn"
+        style="visibility: hidden"
+        onclick="document.getElementById('file-input').click()"
+        aria-label="Open markdown file"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"
+          />
+        </svg>
+        Open file
+      </button>
+
+      <button
+        class="tb-btn"
+        id="toc-btn"
+        onclick="openToc()"
+        aria-label="Table of contents"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M1 2.75A.75.75 0 0 1 1.75 2h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 2.75Zm0 5A.75.75 0 0 1 1.75 7h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 7.75Zm0 5a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1-.75-.75Z"
+          />
+        </svg>
+        Contents
+      </button>
+      <input
+        type="file"
+        id="file-input"
+        accept=".md,.markdown,.txt"
+        aria-hidden="true"
+      />
+    </header>
+
+    <!-- Landing / drop zone -->
+    <main id="landing" role="main">
+      <div id="landing-icon" aria-hidden="true">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+          />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
+      </div>
+      <h1>Open a markdown file</h1>
+      <p>
+        Renders with clean typography in light and dark mode. No editing, just
+        reading.
+      </p>
+      <button
+        id="landing-btn"
+        onclick="document.getElementById('file-input').click()"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"
+          />
+        </svg>
+        Choose .md file
+      </button>
+      <span id="drop-hint">or drag and drop a file here</span>
+    </main>
+
+    <!-- Rendered markdown -->
+    <article id="content" aria-label="Rendered markdown document">
+      <div class="md-body" id="md-body"></div>
+    </article>
+
+    <!-- TOC overlay -->
+    <div
+      id="toc-overlay"
+      role="dialog"
+      aria-label="Table of contents"
+      onclick="closeTocOverlay(event)"
+    >
+      <div id="toc-drawer">
+        <div id="toc-header">
+          Table of contents
+          <button
+            id="toc-close"
+            onclick="closeToc()"
+            aria-label="Close table of contents"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"
+              />
+            </svg>
+          </button>
+        </div>
+        <nav id="toc-links" aria-label="Document headings"></nav>
+      </div>
+    </div>
+
+    <!-- Scroll to top -->
+    <button id="up-btn" onclick="scrollToTop()" aria-label="Scroll to top">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          d="M3.47 7.78a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0l4.25 4.25a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018L9 4.81v7.44a.75.75 0 0 1-1.5 0V4.81L4.53 7.78a.75.75 0 0 1-1.06 0Z"
+        />
+      </svg>
+    </button>
+
+    <!--
+      Both libraries are vendored rather than fetched from a CDN, so the viewer
+      works with no network and nothing a third party serves can execute here.
+      Each file in vendor/ is byte-identical to the copy cdnjs publishes and to
+      the one inside the package npm publishes; tests/vendor.test.js holds the
+      digests and checks them.
+
+      marked 9.1.6   - MIT licence. No GitHub affiliation.
+      DOMPurify 3.4.15 - Apache-2.0 / MPL-2.0.
+    -->
+    <script src="vendor/marked-9.1.6.min.js"></script>
+    <script src="vendor/purify-3.4.15.min.js"></script>
+    <script>
+      /* ── Config ── */
+      const fileInput = document.getElementById("file-input");
+      const landing = document.getElementById("landing");
+      const content = document.getElementById("content");
+      const mdBody = document.getElementById("md-body");
+      const filenameEl = document.getElementById("filename");
+      const tocBtn = document.getElementById("toc-btn");
+      const tocOverlay = document.getElementById("toc-overlay");
+      const tocLinks = document.getElementById("toc-links");
+      const upBtn = document.getElementById("up-btn");
+
+      /* ── Marked setup ── */
+      const renderer = new marked.Renderer();
+
+      /*
+       * There is deliberately no `heading` override. Identifiers are assigned
+       * afterwards, by walking the rendered document — see assignHeadingIds().
+       * Doing it in the renderer misses every heading written as raw HTML, and
+       * it cannot tell that two headings have collided, because the renderer
+       * sees them one at a time.
+       */
+
+      renderer.listitem = function (text, task, checked) {
+        if (task) {
+          /*
+           * marked has already put the checkbox in `text`. This used to add a
+           * second one, so every task-list item rendered with two boxes. All
+           * that is wanted here is the class the styles hang off and the
+           * unwrapping of the paragraph a loose list puts round the item.
+           */
+          return `<li class="task-list-item">${text.replace(/^<p>/, "").replace(/<\/p>\n?$/, "")}</li>\n`;
+        }
+        return `<li>${text}</li>\n`;
+      };
+
+      renderer.list = function (body, ordered, start) {
+        const tag = ordered ? "ol" : "ul";
+        const startAttr = ordered && start !== 1 ? ` start="${start}"` : "";
+        const taskClass = body.includes('class="task-list-item"')
+          ? ' class="task-list"'
+          : "";
+        return `<${tag}${startAttr}${taskClass}>\n${body}</${tag}>\n`;
+      };
+
+      marked.setOptions({ gfm: true, breaks: false, renderer });
+
+      /* ── Render ── */
+
+      /*
+       * Markdown permits raw HTML, so a rendered document contains whatever
+       * the file's author put in it — including <script>, event-handler
+       * attributes and javascript: URLs. Everything here is user-supplied by
+       * definition: the whole program is "open a file someone sent you". So
+       * the output of marked is not markup this page trusts, and it goes
+       * through DOMPurify before it reaches the document.
+       *
+       * The HTML profile is deliberate. SVG and MathML are allowed by default
+       * and are where mutation-XSS historically lives; a markdown viewer has
+       * no use for either, and GitHub strips them too.
+       */
+      function sanitise(html) {
+        if (typeof DOMPurify === "undefined" || !DOMPurify.isSupported) {
+          throw new Error(
+            "MDview: the sanitiser did not load, so nothing will be rendered. " +
+              "vendor/purify-3.4.15.min.js must sit next to this file.",
+          );
+        }
+        return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+      }
+
+      function renderFile(text, name) {
+        /* Sanitise before anything is touched, so a failure leaves whatever
+         * was already open on screen rather than half-clearing it. */
+        const html = sanitise(marked.parse(text));
+
+        mdBody.innerHTML = html;
+        assignHeadingIds();
+        filenameEl.textContent = name;
+        filenameEl.style.visibility = "";
+        document.getElementById("open-btn").style.visibility = "";
+        document.title = name + " - MDview";
+        buildToc();
+        fixHashLinks();
+        addCopyButtons();
+        landing.style.display = "none";
+        content.style.display = "block";
+        window.scrollTo(0, 0);
+      }
+
+      /* ── Heading identifiers ── */
+
+      /*
+       * Three separate things look a heading up by id: the contents, an
+       * in-document [text](#anchor) link, and the scroll handler that decides
+       * which contents entry to highlight. A duplicate id does not fail
+       * visibly — getElementById simply returns the first match — so two
+       * headings sharing one means every link to the second goes to the first.
+       *
+       * Two things used to produce duplicates. `\w` in a regular expression
+       * without the `u` flag is [A-Za-z0-9_], so a heading in any non-Latin
+       * script was stripped to nothing and became the bare id "h-"; and
+       * nothing checked whether a slug had already been used.
+       */
+      function slugify(raw) {
+        return String(raw)
+          .toLowerCase()
+          .replace(/[`*_\[\]]/g, "")
+          .replace(/\s+/g, "-")
+          /* Letters, marks and digits of any script. Marks matter: the vowel
+           * signs in "नमस्ते" are marks, not letters, and dropping them
+           * changes the word. */
+          .replace(/[^\p{L}\p{M}\p{N}_-]/gu, "")
+          .replace(/^-+|-+$/g, "");
+      }
+
+      function assignHeadingIds() {
+        const used = new Set();
+        /* Ids an author wrote themselves are theirs; take them out of play
+         * first so a generated one cannot collide with one further down. */
+        for (const el of mdBody.querySelectorAll("[id]")) used.add(el.id);
+
+        for (const heading of mdBody.querySelectorAll("h1,h2,h3,h4,h5,h6")) {
+          if (heading.id) continue;
+          const base = "h-" + (slugify(heading.textContent) || "section");
+          let id = base;
+          for (let n = 1; used.has(id); n++) id = base + "-" + n;
+          used.add(id);
+          heading.id = id;
+        }
+      }
+
+      /* ── Contents ── */
+
+      /*
+       * Built from the rendered document rather than from the markdown, which
+       * is what makes it agree with the page: a heading is a heading whether
+       * marked produced it or the document wrote it as raw HTML, and whatever
+       * the sanitiser decided to keep is what the reader can click through to.
+       *
+       * Labels are set as text. The original concatenated HTML and stripped
+       * tags out of it with a regular expression, which is a shape that stays
+       * safe only for as long as nobody changes what feeds it.
+       */
+      function buildToc() {
+        const headings = mdBody.querySelectorAll("h1,h2,h3");
+        tocBtn.classList.toggle("visible", headings.length > 2);
+
+        tocLinks.textContent = "";
+        for (const heading of headings) {
+          const link = document.createElement("a");
+          link.href = "#" + heading.id;
+          link.className = "toc-h" + heading.tagName.slice(1);
+          link.textContent = heading.textContent;
+          link.addEventListener("click", closeToc);
+          tocLinks.appendChild(link);
+        }
+      }
+
+      /* ── Copy buttons for code blocks ── */
+
+      /* The same two icons appeared four times between them as inline markup.
+       * They are built once here and cloned, so the path data lives in exactly
+       * one place and the button's text is set as text. */
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const COPY_ICON = [
+        "M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z",
+        "M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z",
+      ];
+      const TICK_ICON = [
+        "M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z",
+      ];
+
+      function setButtonState(btn, paths, label) {
+        const svg = document.createElementNS(SVG_NS, "svg");
+        svg.setAttribute("width", "12");
+        svg.setAttribute("height", "12");
+        svg.setAttribute("viewBox", "0 0 16 16");
+        svg.setAttribute("fill", "currentColor");
+        svg.setAttribute("aria-hidden", "true");
+        for (const d of paths) {
+          const path = document.createElementNS(SVG_NS, "path");
+          path.setAttribute("d", d);
+          svg.appendChild(path);
+        }
+        btn.textContent = "";
+        btn.appendChild(svg);
+        btn.appendChild(document.createTextNode(label));
+      }
+
+      function addCopyButtons() {
+        mdBody.querySelectorAll("pre").forEach((pre) => {
+          const btn = document.createElement("button");
+          btn.className = "code-copy-btn";
+          btn.setAttribute("aria-label", "Copy code");
+          setButtonState(btn, COPY_ICON, "Copy");
+
+          /*
+           * Read the text *before* the button is appended. The button is a
+           * child of the block it copies — the styles position it against the
+           * <pre> — so once it is there its own label is part of the block's
+           * text. A <pre> written as raw HTML has no <code> to fall back to,
+           * and every copy out of one used to end with the word "Copy".
+           */
+          const code = pre.querySelector("code");
+          const text = code ? code.innerText : pre.innerText;
+
+          let resetTimer = null;
+          btn.addEventListener("click", () => {
+            navigator.clipboard
+              .writeText(text)
+              .then(() => {
+                setButtonState(btn, TICK_ICON, "Copied!");
+                btn.classList.add("copied");
+                /* A second click restarts the confirmation; without this the
+                 * first click's timer clears the second one early. */
+                clearTimeout(resetTimer);
+                resetTimer = setTimeout(() => {
+                  setButtonState(btn, COPY_ICON, "Copy");
+                  btn.classList.remove("copied");
+                }, 2000);
+              })
+              .catch((err) => {
+                /*
+                 * writeText rejects for reasons that have nothing to do with
+                 * this page — an unfocused document is the usual one. Say so
+                 * rather than leaving an unhandled rejection; the button stays
+                 * on "Copy", which is honest, because nothing was copied.
+                 */
+                console.error("MDview: could not write to the clipboard.", err);
+              });
+          });
+          pre.appendChild(btn);
+        });
+      }
+
+      /* ── Fix in-document #hash links ── */
+      function fixHashLinks() {
+        mdBody.querySelectorAll('a[href^="#"]').forEach((a) => {
+          a.addEventListener("click", function (e) {
+            const raw = this.getAttribute("href").slice(1);
+            // decodeURIComponent throws on a stray or malformed percent sign,
+            // and "#100%" is an ordinary thing for a heading to be called. An
+            // anchor that cannot be decoded is used as it stands.
+            let hash;
+            try {
+              hash = decodeURIComponent(raw);
+            } catch (err) {
+              hash = raw;
+            }
+            // Try the exact id first (e.g. already prefixed)
+            let target = document.getElementById(hash);
+            // Then try with our 'h-' prefix
+            if (!target) target = document.getElementById("h-" + hash);
+            // Then try re-slugifying (handles spaces encoded as hyphens etc.)
+            if (!target) target = document.getElementById("h-" + slugify(hash));
+            if (target) {
+              e.preventDefault();
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+              // Update URL hash without jumping. On file:// origins,
+              // history.pushState throws ("file:" URLs are treated as
+              // unique security origins), so fall back to location.hash.
+              try {
+                history.pushState(null, "", "#" + target.id);
+              } catch (err) {
+                location.hash = target.id;
+              }
+            }
+          });
+        });
+      }
+
+      /* ── TOC ── */
+      function openToc() {
+        tocOverlay.classList.add("open");
+      }
+      function closeToc() {
+        tocOverlay.classList.remove("open");
+      }
+      function closeTocOverlay(e) {
+        if (e.target === tocOverlay) closeToc();
+      }
+
+      /* Highlight active TOC link on scroll */
+      function updateActiveToc() {
+        const anchors = [...tocLinks.querySelectorAll("a")];
+        if (!anchors.length) return;
+        let active = anchors[0];
+        for (const a of anchors) {
+          const el = document.getElementById(a.getAttribute("href").slice(1));
+          if (el && el.getBoundingClientRect().top <= 80) active = a;
+        }
+        anchors.forEach((a) => a.classList.toggle("toc-active", a === active));
+      }
+
+      /* ── Scroll ── */
+      function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          upBtn.classList.toggle("visible", window.scrollY > 320);
+          updateActiveToc();
+        },
+        { passive: true },
+      );
+
+      /* ── File input ── */
+      function readFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => renderFile(e.target.result, file.name);
+        /*
+         * A file can be deleted, moved or made unreadable between being chosen
+         * and being read. Without this the reader failed and the page sat
+         * there, with no indication that anything had been attempted.
+         */
+        reader.onerror = (e) => {
+          const error = e.target.error;
+          console.error(
+            "MDview: could not read " + file.name + ".",
+            error && error.name ? error.name : error,
+          );
+        };
+        reader.readAsText(file);
+      }
+
+      fileInput.addEventListener("change", (e) => {
+        readFile(e.target.files[0]);
+        e.target.value = "";
+      });
+
+      /* ── Drag & drop ── */
+      ["dragenter", "dragover"].forEach((ev) =>
+        document.addEventListener(ev, (e) => {
+          e.preventDefault();
+          document.body.classList.add("drag-over");
+        }),
+      );
+      ["dragleave", "drop"].forEach((ev) =>
+        document.addEventListener(ev, () =>
+          document.body.classList.remove("drag-over"),
+        ),
+      );
+      document.addEventListener("drop", (e) => {
+        e.preventDefault();
+        readFile(e.dataTransfer.files[0]);
+      });
+    </script>
+  </body>
+</html>

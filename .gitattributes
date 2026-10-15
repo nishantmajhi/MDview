@@ -1,0 +1,10 @@
+# The suite reads index.html and compares a staged copy against it, and the
+# browser runner asserts the copy is that file plus exactly one line. Pinning
+# the working-tree endings keeps that true on every platform.
+* text=auto eol=lf
+
+# The vendored libraries are checked byte for byte against the digests in
+# tests/vendor.test.js, so git must not rewrite them at all. Without this a
+# clone on Windows fails that test for a reason that has nothing to do with
+# the files. This rule comes last because the last matching pattern wins.
+vendor/** -text

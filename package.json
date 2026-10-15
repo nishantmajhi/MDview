@@ -1,0 +1,13 @@
+{
+  "name": "mdview",
+  "version": "1.0.0",
+  "description": "A single-file markdown viewer that runs from the filesystem with no server and no network.",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\" && node tests/browser/run.js",
+    "test:node": "node --test \"tests/*.test.js\"",
+    "test:browser": "node tests/browser/run.js",
+    "test:baseline": "node tests/browser/run.js --original"
+  }
+}
